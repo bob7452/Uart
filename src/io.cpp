@@ -1,7 +1,8 @@
 #include "../includes/io.hpp"
 
 File_IO::File_IO(bool debug): debug(debug){
-    std::cout << "Enable Debug Mode" << debug << std::endl;
+    if(debug)
+        std::cout << "Enable Debug Mode" << std::endl;
 }
 
 File_IO::~File_IO(){

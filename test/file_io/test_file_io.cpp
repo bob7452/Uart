@@ -9,7 +9,7 @@ static void print(const std::string & message){
     std::cout << message << std::endl;
 }
 
-static const std::string path = "/home/ponder/Desktop/projects/Uart/test/sample/UartDataBuff_ttyUSB0.bin";
+static const std::string path = "/home/ponder/Desktop/projects/sample/UartDataBuff_ttyUSB0.bin";
 
 int main(){
     print("start Test File IO");
