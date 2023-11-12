@@ -16,6 +16,19 @@ Grammer::Grammer(const std::string& path, bool debug) : path(path) , debug(debug
 Grammer::~Grammer(){
 }
 
+void Grammer::showMap(){
+    std::cout << "Show Map " << std::endl;
+
+    for (auto& n : this->string_map){
+        std::cout << "key_header : " << n.first << std::endl;
+        std::cout << "words : " <<  n.second << std::endl;
+        
+        for(auto byte : this->hex_map[n.first])
+            std::cout << "bytes : " << byte <<std::endl;
+
+    }
+}
+
 int Grammer::header2int(const std::string & line){
     std::string origin = line;
     origin.erase(std::remove(origin.begin(),origin.end(),' '),origin.end());
@@ -29,7 +42,7 @@ int Grammer::header2int(const std::string & line){
     return header;
 }
 
-void Grammer::storebytes(const std::string& line, std::vector<char>& buffer){
+void Grammer::getbytes(const std::string& line, std::vector<char>& buffer){
     
     for(auto &chars : line){
         if (isspace(chars))
@@ -40,7 +53,7 @@ void Grammer::storebytes(const std::string& line, std::vector<char>& buffer){
     }   
 }
 
-void Grammer::split_word(std::string line,std::string pattern){
+void Grammer::split_word(std::string line,std::string pattern, std::vector<std::string> & buffer){
     std::size_t left  = line.find(pattern);
     std::size_t right = line.rfind(pattern);
 
@@ -60,9 +73,9 @@ void Grammer::split_word(std::string line,std::string pattern){
         std::cout << "Debug " << bytes  << std::endl;
     }
 
-    std::vector<char> byteslist;
-    int key_header = this->header2int(header);
-    this->storebytes(bytes,byteslist);
+    buffer.push_back(header);
+    buffer.push_back(word);
+    buffer.push_back(bytes);
 }
 
 int Grammer::initialize_grammer(void){
@@ -81,9 +94,21 @@ int Grammer::initialize_grammer(void){
         goto Error_Handle;
     } 
 
-    for(auto &line : lines)
-        this->split_word(line,",");      
-    
+    for(auto &line : lines){
+        std::vector<std::string> split_words;
+        this->split_word(line,",",split_words);
+        
+        if(!split_words.empty()){
+            unsigned long key_header = this->header2int(split_words[0]);
+            std::vector<char> bytes;
+            this->getbytes(split_words[2],bytes);
+            this->hex_map.insert({key_header,bytes});
+            this->string_map.insert({key_header,split_words[1]});
+        }
+    }
+
+    if(this->debug)
+        this->showMap();    
 
     Error_Handle:
         if(file_io != nullptr) delete file_io, file_io = nullptr; 
