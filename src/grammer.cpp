@@ -1,7 +1,13 @@
-#include "../include/grammer.hpp"
+#include "../includes/grammer.hpp"
 
-grammer::grammer(std::string path) : spec_path(path){
+Grammer::Grammer(const std::string& path, bool debug) : path(path) , debug(debug){
     std::cout << "create grammer path : " << path << std::endl;
+    std::cout << "Debug Mode" << debug << std::endl;
 }
 
+Grammer::~Grammer(){
+}
 
+int Grammer::initialize_grammer(void){    
+    return 0;
+}
