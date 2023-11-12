@@ -1,6 +1,10 @@
 #include "../includes/grammer.hpp"
 #include <cstddef>
+#include <cstdio>
+#include <sstream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 Grammer::Grammer(const std::string& path, bool debug) : path(path) , debug(debug){
     std::cout << "create grammer path : " << path << std::endl;
@@ -10,6 +14,30 @@ Grammer::Grammer(const std::string& path, bool debug) : path(path) , debug(debug
 }
 
 Grammer::~Grammer(){
+}
+
+int Grammer::header2int(const std::string & line){
+    std::string origin = line;
+    origin.erase(std::remove(origin.begin(),origin.end(),' '),origin.end());
+    
+    unsigned long header;
+    std::istringstream(origin) >> std::hex >> header;
+
+    if(this->debug)
+        std::cout << "Debug Header " << header << std::endl;
+
+    return header;
+}
+
+void Grammer::storebytes(const std::string& line, std::vector<char>& buffer){
+    
+    for(auto &chars : line){
+        if (isspace(chars))
+            continue;
+        if(this->debug)
+            std::cout << "Debug Bytes " << chars << std::endl;
+        buffer.push_back(chars);
+    }   
 }
 
 void Grammer::split_word(std::string line,std::string pattern){
@@ -31,6 +59,10 @@ void Grammer::split_word(std::string line,std::string pattern){
         std::cout << "Debug " << word   << std::endl;
         std::cout << "Debug " << bytes  << std::endl;
     }
+
+    std::vector<char> byteslist;
+    int key_header = this->header2int(header);
+    this->storebytes(bytes,byteslist);
 }
 
 int Grammer::initialize_grammer(void){
