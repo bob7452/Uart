@@ -1,4 +1,5 @@
 #include "../includes/io.hpp"
+#include <vector>
 
 File_IO::File_IO(bool debug): debug(debug){
     if(debug)
@@ -8,54 +9,34 @@ File_IO::File_IO(bool debug): debug(debug){
 File_IO::~File_IO(){
 }
 
-std::vector<std::string> File_IO::readFile(const std::string& filepath){
-    boost::asio::io_service ioService;
-    boost::asio::io_service::work work(ioService); 
-    
-    std::vector<std::string> lines;
+void File_IO::readFile(std::vector<std::string> & lines, const std::string& filepath){
+    std::ifstream inputFile(filepath);
+    if (!inputFile.is_open()) {
+        std::cerr << "Unable to open file: " << filepath << std::endl;
+        throw std::runtime_error("Unable to open file for reading: " + filepath);
+    }
 
-    ioService.post([&]() {
-        std::ifstream inputFile(filepath);
-        if (inputFile.is_open()) {
-            std::string line;
-            
-            while (getline(inputFile, line))
-                lines.push_back(line);
-            
-            inputFile.close();
-        } 
-        else{
-            std::cerr << "Unable to open file: " << filepath << std::endl;
-            throw std::runtime_error("Unable to open file for reading : "+ filepath);
-        }
-    });
+    std::string line;
+    while (getline(inputFile, line)) {
+        if (this->debug)
+            std::cout << "Debug " << line << std::endl;
+        lines.emplace_back(line);
+    }
 
-    // stuck, until service done.
-    ioService.run();
-    return lines; 
+    inputFile.close();
 }
 
 void File_IO::writeFile(const std::string& filepath, const std::vector<std::string>& content) {
-    boost::asio::io_service ioService;
-    boost::asio::io_service::work work(ioService);
-
-    int writeResult = 0;
-
-    ioService.post([&]() {
-        std::ofstream outputFile(filepath);
-        if (outputFile.is_open()) {
-            for (const auto& line : content)
-                outputFile << line << std::endl;
-            outputFile.close();
-        } 
-        else{
-            std::cerr << "Unable to open file for writing: " << filepath << std::endl;
-            throw std::runtime_error("Unable to open file for writing : "+filepath);
+    std::ofstream outputFile(filepath);
+    if (outputFile.is_open()) {
+        for (const auto& line : content) {
+            outputFile << line << std::endl;
         }
-    });
-
-    // stuck, until service done.
-    ioService.run();
+        outputFile.close();
+    } else {
+        std::cerr << "Unable to open file for writing: " << filepath << std::endl;
+        throw std::runtime_error("Unable to open file for writing: " + filepath);
+    }
 }
 
 void File_IO::writeFileAsync(const std::string& filepath, const std::vector<std::string>& content, std::function<void(bool)> callback){
@@ -84,23 +65,30 @@ void File_IO::writeFileAsync(const std::string& filepath, const std::vector<std:
     ioService.run();
 }
 
-std::vector<char> File_IO::readBinaryFile(const std::string& filepath){
+void File_IO::readBinaryFile(std::vector<char>& buffer, const std::string& filepath){
     std::ifstream inputFile(filepath, std::ios::binary);
 
     if (!inputFile.is_open()) {
         throw std::runtime_error("Error opening binary file: " + filepath);
     }
 
-    inputFile.seekg(0, std::ios::end);
-    std::streamsize fileSize = inputFile.tellg();
-    inputFile.seekg(0, std::ios::beg);
+    const std::streamsize chunkSize = 4096; 
 
-    std::vector<char> buffer(fileSize);
-    inputFile.read(buffer.data(), fileSize);
+    while (true) {
+        std::vector<char> chunk(chunkSize);
+        inputFile.read(chunk.data(), chunkSize);
+
+        if(this->debug)
+            std::cout << "Debug Mode read bin file" << std::endl;
+
+        if (inputFile.gcount() <= 0) {
+            break;
+        }
+
+        buffer.insert(buffer.end(), chunk.begin(), chunk.begin() + inputFile.gcount());
+    }
 
     inputFile.close();
-
-    return buffer;
 }
 
 void File_IO::writeBinaryFile(const std::string& filepath, const std::vector<char>& content) {

@@ -20,14 +20,14 @@ class File_IO{
     public:
         
         /*sync io service*/
-        std::vector<std::string> readFile(const std::string& filepath);
+        void readFile(std::vector<std::string> & lines , const std::string& filepath);
         void writeFile(const std::string& filepath, const std::vector<std::string>& content);
 
         /*async io service*/
         void writeFileAsync(const std::string& filepath, const std::vector<std::string>& content, std::function<void(bool)> callback);
 
         /*sync Binary file*/
-        std::vector<char> readBinaryFile(const std::string& filepath);
+        void readBinaryFile(std::vector<char>& buffer, const std::string& filepath);
         void writeBinaryFile(const std::string& filepath, const std::vector<char>& content);
 
 
